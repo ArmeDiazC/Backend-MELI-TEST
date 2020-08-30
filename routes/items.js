@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 const author = {
   author: {
     name: "Armed",
-    lastname: "Diaz c",
+    lastname: "Diaz C.",
   },
 };
 
@@ -19,6 +19,8 @@ const formatProduct = ({
   thumbnail,
   address,
   shipping,
+  seller_address,
+  pictures,
 }) => {
   return {
     id,
@@ -31,11 +33,11 @@ const formatProduct = ({
           ? Number(price.toString().match(/[^.]*$/))
           : 0,
     },
-    picture: thumbnail,
+    picture: pictures ? pictures[0].url : thumbnail,
     condition,
     free_shipping: shipping.free_shipping,
     sold_quantity,
-    address: address.state_name,
+    address: address ? address.state_name : seller_address.state.name,
   };
 };
 
@@ -47,21 +49,19 @@ router.get("/", async (req, res, next) => {
     const response = await fetch(
       `https://api.mercadolibre.com/sites/MLA/search?q=${req.query.q}`
     );
-    const json = await response.json();
+    const jsonSearch = await response.json();
+
     const categories = {
-      categories: json.filters
+      categories: jsonSearch.filters
         .map(({ values }) => {
           return values.map(({ name }) => name);
         })
         .flat(),
     };
-    const list = json.results.slice(0, 4);
+    const list = jsonSearch.results.slice(0, 4);
     const items = {
       items: list.map((product) => formatProduct(product)),
     };
-
-    // const items2 = list.map((product) => formatProduct(product));
-    // const searchResponse = { ...items2 };
 
     const searchResponse = { ...author, ...items, ...categories };
     // console.log(json);
@@ -81,10 +81,15 @@ router.get("/:id", async (req, res, next) => {
     const responseDescription = await fetch(
       `https://api.mercadolibre.com/items/${req.params.id}/description`
     );
-    const jsonId = await responseId.json();
-    const { plain_text } = await responseDescription.json();
-    const productData = { ...jsonId, ...plain_text };
-    const product = res.json(product);
+    const dataProduct = await responseId.json();
+    const descriptionProduct = await responseDescription.json();
+
+    const product = { items: formatProduct(dataProduct) };
+    product.items.description = descriptionProduct.plain_text;
+
+    const productResponse = { ...author, ...product };
+
+    res.json(productResponse);
   } catch (error) {
     console.log(error);
   }
