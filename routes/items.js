@@ -41,11 +41,9 @@ const formatProduct = ({
   };
 };
 
-/* GET home page. */
+/* GET items page. */
 router.get("/", async (req, res, next) => {
-  // res.render('index', { title: 'Express' });
   try {
-    console.log(req);
     const response = await fetch(
       `https://api.mercadolibre.com/sites/MLA/search?q=${req.query.q}`
     );
@@ -64,7 +62,6 @@ router.get("/", async (req, res, next) => {
     };
 
     const searchResponse = { ...author, ...items, ...categories };
-    // console.log(json);
     res.json(searchResponse);
   } catch (error) {
     console.log(error);
@@ -72,9 +69,7 @@ router.get("/", async (req, res, next) => {
 });
 
 router.get("/:id", async (req, res, next) => {
-  // res.render('index', { title: 'Express' });
   try {
-    console.log(req);
     const responseId = await fetch(
       `https://api.mercadolibre.com/items/${req.params.id}`
     );
@@ -93,7 +88,6 @@ router.get("/:id", async (req, res, next) => {
   } catch (error) {
     console.log(error);
   }
-  // // console.log(json);
 });
 
 module.exports = router;
